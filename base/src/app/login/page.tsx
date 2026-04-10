@@ -71,7 +71,12 @@ export default function BaseLogin() {
 
       // Success
       localStorage.setItem('BASE_CLIENT_MANDT', mandt);
-      window.location.href = '/se11';
+      if (!password) {
+        localStorage.setItem('BASE_FIRST_LOGON', 'true');
+        window.location.href = '/set-password';
+      } else {
+        window.location.href = '/launchpad';
+      }
 
     } catch (err: any) {
       // Explicitly catch custom backend strings (starting with E:) for native look

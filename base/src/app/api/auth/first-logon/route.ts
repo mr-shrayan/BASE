@@ -18,32 +18,52 @@ export async function POST(req: Request) {
     const { data: usersData, error: userError } = await supabaseAdmin.auth.admin.listUsers();
     if (userError) throw userError;
 
+    // System Bootstrap Mode: If exact zero users exist, auto-provision first user as Admin.
+    if (usersData.users.length === 0) {
+       const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+         email: sysEmail,
+         password: defaultPassword,
+         email_confirm: true,
+         user_metadata: { mandt: mandt, role: 'admin' }
+       });
+
+       if (createError) throw createError;
+
+       return NextResponse.json({ 
+         success: true, 
+         message: 'I: System auto-bootstrapped. Proceeding to setup.',
+         temporaryKey: defaultPassword 
+       });
+    }
+
     const existingUser = usersData.users.find(u => u.email === supabaseEmail);
 
     if (existingUser) {
-       // User exists! If they hit this route, it means they tried to log in without a password.
-       // We must explicitly reject this to maintain security - they must provide their password.
+       // Check if this user has already logged in previously
+       if (existingUser.last_sign_in_at) {
+          return NextResponse.json({ 
+            error: 'E: Account already initialized. Please provide your permanent password.'
+          }, { status: 401 });
+       }
+
+       // Temporarily assign the system default password so the frontend can auth and route to /set-password
+       const { error: resetError } = await supabaseAdmin.auth.admin.updateUserById(existingUser.id, {
+         password: defaultPassword
+       });
+
+       if (resetError) throw resetError;
+
        return NextResponse.json({ 
-         error: 'E: User already exists. Please provide your password.',
-         requiresPassword: true 
-       }, { status: 401 });
+         success: true, 
+         message: 'I: Initial logon verified. Proceeding to setup.',
+         temporaryKey: defaultPassword 
+       });
+       
+    } else {
+       return NextResponse.json({ 
+         error: 'E: User account does not exist. Must be provisioned by System Administrator (SU01).'
+       }, { status: 403 });
     }
-
-    // 2. User does not exist, so we Auto-Provision them (First-Time Login Flow)
-    const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email: sysEmail,
-      password: defaultPassword,
-      email_confirm: true,
-    });
-
-    if (createError) throw createError;
-
-    // 3. Return the default password securely back over HTTPS so the client can establish the session
-    return NextResponse.json({ 
-      success: true, 
-      message: 'I: User provisioned successfully.',
-      temporaryKey: defaultPassword 
-    });
 
   } catch (err: any) {
     return NextResponse.json({ error: `E: ${err.message}` }, { status: 500 });

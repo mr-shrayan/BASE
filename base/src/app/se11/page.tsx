@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useCallback, memo } from 'react';
+import { useState, useCallback, memo, useEffect } from 'react';
+import { useGui } from '@/context/GuiContext';
 
 // Extracted and Memoized row component for extreme performance 
 // Prevents all 100+ rows from re-rendering every time the user types in a single input box.
@@ -88,8 +89,13 @@ export default function SE11() {
   const [fields, setFields] = useState([
     { fieldname: 'MANDT', datatype: 'CHAR', leng: 3, decimals: 0, keyflag: true, ddtext: 'Client' },
   ]);
-  const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
+  const { setTitle, setSystemMessage, clearSystemMessage } = useGui();
+
+  useEffect(() => {
+    setTitle('Data Dictionary: Initial Screen');
+    return () => clearSystemMessage();
+  }, [setTitle, clearSystemMessage]);
 
   const addField = useCallback(() => {
     setFields(prev => [...prev, { fieldname: '', datatype: 'CHAR', leng: 10, decimals: 0, keyflag: false, ddtext: '' }]);
@@ -109,12 +115,12 @@ export default function SE11() {
 
   const handleActivate = async () => {
     if (!tabname) {
-      setStatus('E: Table name is required.');
+      setSystemMessage('Table name is required.', 'E');
       return;
     }
     
     setLoading(true);
-    setStatus('I: Generating database objects...');
+    setSystemMessage('Generating database objects...', 'I');
 
     try {
       const response = await fetch('/api/se11', {
@@ -128,55 +134,31 @@ export default function SE11() {
       const data = await response.json();
 
       if (!response.ok) {
-        setStatus(`E: ${data.error}`);
+        setSystemMessage(data.error.substring(3), 'E');
       } else {
-        setStatus(`S: Database table ${tabname.toUpperCase()} activated successfully.`);
-        // Note: Could navigate automatically, but BASE usually stays on page after activation success.
+        setSystemMessage(`Database table ${tabname.toUpperCase()} activated successfully.`, 'S');
       }
     } catch (err: any) {
-      setStatus(`E: ${err.message}`);
+      setSystemMessage(err.message, 'E');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 font-sans p-6 text-sm">
+    <div className="bg-transparent text-gray-800 font-sans p-4 text-sm max-w-6xl mx-auto">
       
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="space-y-4">
         
-        {/* Header Ribbon */}
-        <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-          <div>
-            <h1 className="text-2xl font-light text-gray-800 tracking-tight">Data Dictionary</h1>
-            <p className="text-gray-500 text-xs mt-1 font-medium">SE11 • Table Configuration & Activation</p>
-          </div>
-          <div>
+        <div className="flex justify-end mb-2">
             <button 
               onClick={handleActivate} 
               disabled={loading} 
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg flex items-center space-x-2 shadow-sm transition-all disabled:bg-blue-300 disabled:cursor-not-allowed"
+              className="px-4 py-1.5 bg-[#0070F2] hover:bg-[#005CC6] text-white font-medium rounded flex items-center shadow-sm disabled:opacity-50 transition-colors"
             >
-              <span>{loading ? 'Activating Object...' : 'Activate System Table'}</span>
-              {!loading && (
-                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-              )}
+              <span>{loading ? 'Activating...' : 'Activate System Table'}</span>
             </button>
-          </div>
         </div>
-
-        {/* Status Message */}
-        {status && (
-          <div className={`p-4 rounded-lg border text-sm flex items-start space-x-3 
-            ${status.startsWith('E:') ? 'bg-red-50 border-red-200 text-red-700' : 
-              status.startsWith('S:') ? 'bg-green-50 border-green-200 text-green-800' : 
-              'bg-blue-50 border-blue-200 text-blue-800'} transition-all`}
-          >
-            {status.startsWith('E:') && <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>}
-            {status.startsWith('S:') && <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>}
-            <span className="font-medium">{status.substring(3)}</span>
-          </div>
-        )}
 
         {/* Master Data Card */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">

@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // Session Guard: Prevent access to login/root if already authenticated
         if (pathname === '/login' || pathname === '/') {
-          router.replace('/se11'); // Default transaction
+           router.replace('/launchpad'); // Enterprise Fiori Dashboard
         }
       } else {
         setUser(null);
@@ -72,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     await supabase.auth.signOut();
     localStorage.removeItem('BASE_CLIENT_MANDT');
+    localStorage.removeItem('BASE_FIRST_LOGON');
     setUser(null);
     router.push('/login');
   };
