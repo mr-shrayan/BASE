@@ -2,18 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import { useGui } from '@/context/GuiContext';
+import { useAuth } from '@/context/AuthContext';
 
 export default function SU01() {
   const [bname, setBname] = useState('');
   const [mandt, setMandt] = useState('800');
   const [role, setRole] = useState('user');
   const [loading, setLoading] = useState(false);
-  const { setTitle, setSystemMessage, clearSystemMessage } = useGui();
+  const { setTitle, setSystemMessage, clearSystemMessage, setTcode } = useGui();
+  const { user: currentUser } = useAuth();
 
   useEffect(() => {
-    setTitle('User Maintenance: Initial Screen');
+    setTcode('SU01');
+    setTitle('User Maintenance');
     return () => clearSystemMessage();
-  }, [setTitle, clearSystemMessage]);
+  }, [setTitle, clearSystemMessage, setTcode]);
 
   const handleProvision = async (e: React.FormEvent) => {
     e.preventDefault();

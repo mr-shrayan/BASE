@@ -22,6 +22,55 @@ const mapBASETypeToPostgres = (baseType: string, length?: number, decimals?: num
   }
 };
 
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const tabname = searchParams.get('tabname')?.toUpperCase();
+
+  if (!tabname) return NextResponse.json({ error: 'E: Table name required.' }, { status: 400 });
+
+  try {
+    let { data: fields, error } = await supabaseAdmin
+      .from('DD03L')
+      .select('FIELDNAME, DATATYPE, LENG, DECIMALS, KEYFLAG, DDTEXT')
+      .eq('TABNAME', tabname)
+      .order('POSITION', { ascending: true });
+
+    if (error || !fields || fields.length === 0) {
+      if (tabname === 'DD02L') {
+        fields = [
+          { FIELDNAME: 'TABNAME', DATATYPE: 'CHAR', LENG: 30, DDTEXT: 'Table Name' },
+          { FIELDNAME: 'AS4LOCAL', DATATYPE: 'CHAR', LENG: 1, DDTEXT: 'Activation Status' }
+        ];
+      } else if (tabname === 'DD03L') {
+        fields = [
+          { FIELDNAME: 'TABNAME', DATATYPE: 'CHAR', LENG: 30, DDTEXT: 'Table Name' },
+          { FIELDNAME: 'FIELDNAME', DATATYPE: 'CHAR', LENG: 30, DDTEXT: 'Field Name' },
+          { FIELDNAME: 'POSITION', DATATYPE: 'INT', LENG: null, DDTEXT: 'Position' },
+          { FIELDNAME: 'DATATYPE', DATATYPE: 'CHAR', LENG: 4, DDTEXT: 'Data Type' },
+          { FIELDNAME: 'LENG', DATATYPE: 'INT', LENG: null, DDTEXT: 'Length' },
+          { FIELDNAME: 'DECIMALS', DATATYPE: 'INT', LENG: null, DDTEXT: 'Decimals' },
+          { FIELDNAME: 'KEYFLAG', DATATYPE: 'CHAR', LENG: 1, DDTEXT: 'Key Flag' },
+          { FIELDNAME: 'DDTEXT', DATATYPE: 'CHAR', LENG: 60, DDTEXT: 'Short Text' }
+        ];
+      } else if (tabname === 'USER_METADATA') {
+         fields = [
+           { FIELDNAME: 'ID', DATATYPE: 'CHAR', LENG: null, DDTEXT: 'Profile Key' },
+           { FIELDNAME: 'USER_ID', DATATYPE: 'CHAR', LENG: null, DDTEXT: 'UUID reference' },
+           { FIELDNAME: 'BNAME', DATATYPE: 'CHAR', LENG: 12, DDTEXT: 'User Name' },
+           { FIELDNAME: 'MANDT', DATATYPE: 'CHAR', LENG: 3, DDTEXT: 'Client' },
+           { FIELDNAME: 'ROLE', DATATYPE: 'CHAR', LENG: 10, DDTEXT: 'Auth Role' }
+         ];
+      } else {
+         return NextResponse.json({ error: `E: Table ${tabname} does not exist.` }, { status: 404 });
+      }
+    }
+
+    return NextResponse.json({ fields });
+  } catch (err: any) {
+    return NextResponse.json({ error: `E: ${err.message}` }, { status: 500 });
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const { tabname, description, fields } = await req.json();

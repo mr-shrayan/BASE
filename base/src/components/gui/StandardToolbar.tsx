@@ -3,15 +3,17 @@
 import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useGui } from '@/context/GuiContext';
 
 export default function StandardToolbar() {
   const [tcode, setTcode] = useState('');
   const { user, loading, logout } = useAuth();
+  const { setSystemMessage } = useGui();
   const router = useRouter();
 
   const pathname = usePathname();
 
-  const handleCommand = (e: React.KeyboardEvent) => {
+  const handleCommand = async (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && tcode.trim()) {
       const command = tcode.trim().toUpperCase();
       
@@ -20,11 +22,18 @@ export default function StandardToolbar() {
          return;
       }
       
-      if (command.startsWith('/N')) {
-        router.push(`/${command.substring(2).toLowerCase()}`);
-      } else {
-        router.push(`/${command.toLowerCase()}`);
+      const strippedCommand = command.startsWith('/N') ? command.substring(2) : command;
+      
+      try {
+         const res = await fetch(`/api/tstc?tcode=${strippedCommand}`);
+         const data = await res.json();
+         if (!res.ok) throw new Error(data.error);
+         
+         router.push(data.path);
+      } catch (err: any) {
+         setSystemMessage(err.message, 'E');
       }
+
       setTcode('');
     }
   };

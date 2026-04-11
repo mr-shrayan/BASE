@@ -4,7 +4,7 @@ import { useGui } from '@/context/GuiContext';
 import { useAuth } from '@/context/AuthContext';
 
 export default function StatusBar() {
-  const { message } = useGui();
+  const { message, tcode } = useGui();
   const { user, loading } = useAuth();
   
   if (loading || !user) return null;
@@ -33,6 +33,9 @@ export default function StatusBar() {
       <div className="flex h-full items-center shrink-0">
         <div className="px-3 border-r border-gray-300 h-full flex items-center hover:bg-gray-200 cursor-default">
            <span>BASE</span>
+        </div>
+        <div className="px-3 border-r border-gray-300 h-full flex items-center hover:bg-gray-200 cursor-default uppercase font-bold text-gray-800">
+           <span>{tcode || 'SESSION'}</span>
         </div>
         <div className="px-3 border-r border-gray-300 h-full flex items-center hover:bg-gray-200 cursor-default">
            <svg className="w-2.5 h-2.5 mr-1 text-gray-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>

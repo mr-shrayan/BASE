@@ -2,14 +2,20 @@
 
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
 
 export default function BaseLogin() {
+  const { user, loading: authLoading } = useAuth();
+
   const [mandt, setMandt] = useState('800');
   const [bname, setBname] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [infoMessage, setInfoMessage] = useState('');
+
+  // Critical Prevent Flash Rule
+  if (authLoading || user) return <div className="min-h-screen bg-[#F4F5F7]"></div>;
 
   const handleLogon = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -34,17 +34,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data.session?.user?.email) {
         const username = data.session.user.email.split('@')[0].toUpperCase();
         setUser({ mandt, username });
-        
-        // Session Guard: Prevent access to login/root if already authenticated
-        if (pathname === '/login' || pathname === '/') {
-           router.replace('/launchpad'); // Enterprise Fiori Dashboard
-        }
       } else {
         setUser(null);
-        // Ensure unauthenticated users are kicked to login
-        if (pathname !== '/login') {
-           router.replace('/login');
-        }
       }
     } catch (err) {
       console.error('Auth Context Error:', err);
@@ -67,7 +58,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [pathname]); // Refresh on route changes to enforce guards
+  }, []); // Run ONLY once on mount for bootstrapping
+
+  // Strictly isolated Route Guarding
+  useEffect(() => {
+    if (!loading) {
+      if (user && (pathname === '/login' || pathname === '/')) {
+        router.replace('/launchpad'); // Boot out of login
+      } else if (!user && pathname !== '/login') {
+        router.replace('/login'); // Boot back to login
+      }
+    }
+  }, [pathname, user, loading, router]);
 
   const logout = async () => {
     await supabase.auth.signOut();

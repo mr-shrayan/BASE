@@ -169,6 +169,37 @@ const tables = [
     ['ZIEME', 'CHAR', 3, 0, false, 'Target quantity UoM'],
     ['NETPR', 'CURR', 11, 2, false, 'Net Price'],
     ['WAERK', 'CHAR', 5, 0, false, 'SD Document Currency']
+  ]),
+
+  // 6. SYSTEM ADMINISTRATION & ARCHITECTURE
+  constructTable('TSTC', 'SAP Transaction Codes', [
+    ['MANDT', 'CHAR', 3, 0, true, 'Client'],
+    ['TCODE', 'VARCHAR', 20, 0, true, 'Transaction Code'],
+    ['PGMNA', 'VARCHAR', 40, 0, false, 'Program'],
+    ['TTEXT', 'VARCHAR', 60, 0, false, 'Transaction Text']
+  ]),
+  constructTable('USER_FAVORITES', 'Launchpad User Favorites', [
+    ['MANDT', 'CHAR', 3, 0, true, 'Client'],
+    ['UNAME', 'VARCHAR', 12, 0, true, 'User Name'],
+    ['TCODE', 'VARCHAR', 20, 0, true, 'Transaction Code'],
+    ['TTEXT', 'VARCHAR', 60, 0, false, 'Transaction Text']
+  ]),
+  constructTable('CDHDR', 'Change document header', [
+    ['MANDT', 'CHAR', 3, 0, true, 'Client'],
+    ['OBJECTCLAS', 'VARCHAR', 15, 0, true, 'Object class'],
+    ['CHANGENR', 'VARCHAR', 10, 0, true, 'Document change number'],
+    ['USERNAME', 'VARCHAR', 12, 0, false, 'User name of the person responsible in change document'],
+    ['UDATE', 'DATS', 0, 0, false, 'Creation date of the change document'],
+    ['UTIME', 'VARCHAR', 6, 0, false, 'Time changed'],
+    ['TCODE', 'VARCHAR', 20, 0, false, 'Transaction in which a change was made']
+  ]),
+  constructTable('CDPOS', 'Change document items', [
+    ['MANDT', 'CHAR', 3, 0, true, 'Client'],
+    ['CHANGENR', 'VARCHAR', 10, 0, true, 'Document change number'],
+    ['TABNAME', 'VARCHAR', 30, 0, true, 'Table Name'],
+    ['FNAME', 'VARCHAR', 30, 0, true, 'Field Name'],
+    ['VALUE_OLD', 'VARCHAR', 255, 0, false, 'Old contents of changed field'],
+    ['VALUE_NEW', 'VARCHAR', 255, 0, false, 'New contents of changed field']
   ])
 ];
 
